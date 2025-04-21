@@ -1,13 +1,12 @@
 import { useState, ReactNode, useEffect, useRef, RefObject } from "react";
-import { useSetUser, useUser, UserProvider } from "./userContext";
+import { useCurrentUser, UserProvider } from "./userContext";
 import { Link, useNavigate, Route, BrowserRouter, Routes } from "react-router-dom";
 import './App.css';
 import React from "react";
 
 export function Header() {
-  const user = useUser().user;
+  const { user, setUser } = useCurrentUser();
   const isLoggedIn: boolean = user !== null;
-  const setUser = useSetUser();
 
   async function handleLogoutClick(_e: React.MouseEvent) {
     if (!setUser) {
@@ -18,10 +17,7 @@ export function Header() {
 
   return (
     <header>
-      <div style={{
-        display: 'flex',
-        flexDirection: 'row',
-      }}>
+      <div className="header-links">
         {
           isLoggedIn ? (
             <>
@@ -60,15 +56,15 @@ export function Footer() {
 }
 
 export function LoginPage() {
-  const setUser = useSetUser();
-  const { formData, error, setFormData, handleFormDataChange, setCustomErrorTimeout } = useForm(
+  const useUser = useCurrentUser();
+  const { formData, error, setFormData, handleFormDataChange, setCustomErrorTimeout, setCustomTimeout } = useForm(
     {
       username: '',
       password: '',
     }
   );
 
-  const isLoggedIn = useUser().user !== null;
+  const isLoggedIn = useUser.user !== null && useUser.user !== undefined;
   let navigate = useNavigate();
 
   useEffect(() => {
@@ -110,11 +106,11 @@ export function LoginPage() {
         return;
       }
 
-      if (!setUser) {
+      if (!useUser.setUser) {
         throw new Error("useSetUser must be used within User Provider");
       }
-      setUser(json["gid"]);
-      navigate("/");
+      useUser.setUser((_user: number | null) => parseInt(json["gid"]));
+      setCustomTimeout(navigate, ["/"], 2000);
     } catch (error: any) {
       console.error(error.message); 
     }
@@ -129,10 +125,10 @@ export function LoginPage() {
         <input type="text" name="username" value={formData.username} onChange={handleFormDataChange} />
         <label htmlFor="password">Password</label>
         <input type="password" name="password" value={formData.password} onChange={handleFormDataChange} />
-        {error && <h2> {error} </h2>}
+        {error && <h4> {error} </h4>}
         <button type="submit" className="submit-btn">Log In</button>
       </form>
-      <Link to="../signup"> Click here to sign up </Link>
+      <Link to="../signup" className="alt-link"> Click here to sign up </Link>
     </div>
   );
 }
@@ -140,25 +136,29 @@ export function LoginPage() {
 export function useForm(initialState: any) {
   const [formData, setFormData] = useState(initialState);
   const [error, setError] = useState('');
-  const timeoutRef = useRef<number | null>(null);
+  const timeoutRefs = useRef<number[]>([]);
 
   useEffect( () => {
     return () => {
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-      }
+      timeoutRefs.current.forEach(clearTimeout);
+      timeoutRefs.current = [];
     }
   }, []);
+
+  const setCustomErrorTimeout = (message: string) => {
+    setError(message);
+    const timeoutId = setTimeout(() => {
+      setError('');
+      timeoutRefs.current.filter(id => id != timeoutId);
+    }, 2000);
+    timeoutRefs.current.push(timeoutId);
+  }
 
   const handleFormDataChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     
     if (!(Object.keys(formData).includes(name))) {
-      setError("Unknown form field");
-      timeoutRef.current = setTimeout(() => {
-        setError('');
-        timeoutRef.current = null;
-      }, 1000);
+      setCustomErrorTimeout("Unknown Form Field");
     }
     setFormData((prev: any) => ({
       ...prev,
@@ -166,12 +166,12 @@ export function useForm(initialState: any) {
     }));
   };
 
-  const setCustomErrorTimeout = (message: string) => {
-    setError(message);
-    timeoutRef.current = setTimeout(() => {
-      setError('');
-      timeoutRef.current = null;
-    }, 1000);
+  const setCustomTimeout = (func: Function, args: [any], delay: number) => {
+    const timeoutId = setTimeout(() => {
+      func(...args);
+      timeoutRefs.current.filter(id => id != timeoutId);
+    }, delay);
+    timeoutRefs.current.push(timeoutId);
   }
 
   return {
@@ -180,19 +180,23 @@ export function useForm(initialState: any) {
     error,
     handleFormDataChange,
     setCustomErrorTimeout,
+    setCustomTimeout,
   }
 }
 
 export function SignUpPage() {
-  const { formData, error, handleFormDataChange, setCustomErrorTimeout } = useForm(
+  const { formData, error, handleFormDataChange, setCustomErrorTimeout, setCustomTimeout } = useForm(
     {
       username: '',
       password: '',
       passwordConfirm: ''
     }
   );
-  const isLoggedIn = useUser().user !== null;
+  const useUser = useCurrentUser();
+  const [submitBtnMsg, setSubmitBtnMsg] = useState('Sign up');
   let navigate = useNavigate();
+  const isLoggedIn = useUser.user !== null && useUser.user !== undefined;
+  console.log(useUser.user, isLoggedIn);
 
   useEffect(() => {
     if (isLoggedIn) {
@@ -229,7 +233,8 @@ export function SignUpPage() {
         setCustomErrorTimeout(errorMessage);
         return;
       }
-      navigate("../login");
+      setSubmitBtnMsg('Success!');
+      setCustomTimeout(navigate, ["../login"], 1000);
     } catch (error: any) {
       console.error(error.message); 
     }
@@ -246,10 +251,10 @@ export function SignUpPage() {
         <input type="password" name="password" value={formData.password} onChange={handleFormDataChange} />
         <label htmlFor="passwordConfirm"> Re-enter your Password</label>
         <input type="password" name="passwordConfirm" value={formData.passwordConfirm} onChange={handleFormDataChange} />
-        {error && <h2> {error} </h2>}
-        <button type="submit" className="submit-btn">Sign Up</button>
+        {error && <h4> {error} </h4>}
+        <button type="submit" className="submit-btn">{submitBtnMsg}</button>
       </form>
-      <Link to="../login"> Click here to login </Link>
+      <Link to="../login" className="alt-link"> Click here to login </Link>
     </div>
   );
 }
@@ -263,7 +268,8 @@ export function CheckInForm({ tableListData, setTableListData, tableCellId, setT
     phoneNumber: ''
   });
   const [error, setError] = useState('');
-  const isLoggedIn: boolean = useUser().user !== null;
+  const { user } = useCurrentUser();
+  const isLoggedIn = user !== null && user !== undefined;
   let timeoutRef: RefObject<number | null> = useRef(null);
 
   useEffect(() => {
@@ -328,7 +334,7 @@ export function CheckInForm({ tableListData, setTableListData, tableCellId, setT
       timeoutRef.current = setTimeout(() => {
         setError("");
         timeoutRef.current = null;
-      }, 1000);
+      }, 2000);
     }
     setFormData(prev => ({
       ...prev,
@@ -339,37 +345,35 @@ export function CheckInForm({ tableListData, setTableListData, tableCellId, setT
   if (!isLoggedIn) {
     return (
       <>
-        <h2> Invalid permissions </h2>
       </>
     );
   }
 
   return (
-    <form onSubmit={handleSubmit} onChange={handleFormDataChange}>
-      <h2> Submit a check-in </h2>
-      <input type="text" name="firstName" id="" />
-      <input type="text" name="lastName" id="" />
-      <textarea name="message"/>
-      <input type="tel" name="phoneNumber" id="" />
-      <button type="submit"> Submit </button>
-      {
-        (error && error.length > 0) && <h2> {error} </h2>
-      }
+    <div className="form-wrapper">
+      <form onSubmit={handleSubmit} onChange={handleFormDataChange} className="form">
+        <h2> Submit a check-in </h2>
+        <label htmlFor="firstName">First Name </label>
+        <input type="text" name="firstName" id="" />
+        <label htmlFor="lastName">Last Name</label>
+        <input type="text" name="lastName" id="" />
+        <label htmlFor="message">Message</label>
+        <textarea name="message"/>
+        <label htmlFor="phoneNumber">Phone Number</label>
+        <input type="tel" name="phoneNumber" id="" />
+        <button type="submit" className="submit-btn"> Submit </button>
+        {
+          (error && error.length > 0) && <h4> {error} </h4>
+        }
     </form>
+    </div>
   )
 }
 
 export function CheckInTable({ tableListData }: any) {
-  const isLoggedIn = useUser().user !== null;
-
-  if (!isLoggedIn)
-    return (
-      <>
-      </>
-    );
-
   return (
     <>
+      <h2> Past Check-in Records</h2>
       <table>
         <thead>
           <tr>
@@ -379,7 +383,7 @@ export function CheckInTable({ tableListData }: any) {
           </tr>
         </thead>
         <tbody>
-          {tableListData ? tableListData : (
+          {tableListData.length > 0 ? tableListData : (
             <tr>
               <td>Null</td>
               <td>Null</td>
@@ -393,17 +397,17 @@ export function CheckInTable({ tableListData }: any) {
 }
 
 export function MyCheckinPage(): ReactNode | Promise<ReactNode> {
-  const userContext = useUser();
+  const { user } = useCurrentUser();
   const [checkInData, setCheckInData] = useState([]);
   const checkinId = useRef(0);
 
   useEffect(() => {
-    if (userContext.user === null) {
+    if (user === null || user === undefined) {
       return;
     }
 
     const fetchGuestData = async () => {
-      const guestId = userContext.user;
+      const guestId = user;
       const url = `/api/guest/${guestId}`;
       const response = await fetch(url);
       try {
@@ -425,12 +429,16 @@ export function MyCheckinPage(): ReactNode | Promise<ReactNode> {
       }
     }
     fetchGuestData();
-  }, [userContext.user])
+  }, [user])
 
   return (
     <>
       <ul>
-        {checkInData.map(item => <li> {item} </li>)}
+        {
+          checkInData.length > 0 ? 
+          checkInData.map(item => (<li> {item} </li>)) :
+          (<> <h2> No checkins available yet </h2> </>)
+        }
       </ul>
     </>
   );
@@ -485,27 +493,25 @@ export function LandingPage(): ReactNode | Promise<ReactNode> {
 
 export default function App() {
   return (
-    <>
     <React.StrictMode>
-    <BrowserRouter>
-      <UserProvider>
-        <Routes>
-          <Route path="/" element={
-            <>
-              <LandingPage />
-            </>
-          } />
-          <Route path="/my-checkins" element={<MyCheckinPage />}>
-          </Route>
-          <Route path="user">
-            <Route index path="signup" element={<SignUpPage />} />
-            <Route path="login" element={<LoginPage />} />
-          </Route>
-        </Routes>
-      </UserProvider>
-    </BrowserRouter>
+      <BrowserRouter>
+        <UserProvider>
+          <Routes>
+            <Route path="/" element={
+              <>
+                <LandingPage />
+              </>
+            } />
+            <Route path="/my-checkins" element={<MyCheckinPage />}>
+            </Route>
+            <Route path="user">
+              <Route index path="signup" element={<SignUpPage />} />
+              <Route path="login" element={<LoginPage />} />
+            </Route>
+          </Routes>
+        </UserProvider>
+      </BrowserRouter>
     </React.StrictMode>
-    </>
   );
 }
 

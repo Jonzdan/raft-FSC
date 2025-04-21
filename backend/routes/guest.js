@@ -33,12 +33,6 @@ guestRouter.post("/new-check-in", async(req, res) => {
             });
         }
 
-        if (rowsAffected === db.clientErrorCode) {
-            return res.status(400).json({
-                error: "Bad Request"
-            });
-        }
-
         return res.status(200).json({
             message: "Success"
         });
@@ -54,20 +48,24 @@ guestRouter.post("/new-check-in", async(req, res) => {
 
 guestRouter.get("/all", async(req, res) => {
     try {
-        const query = "SELECT first_name, last_name, message, phone_number FROM check_ins;";
+        const query = "SELECT first_name, last_name, message FROM check_ins;";
 
-        const result = await db.query(query);
-
-        if (result === db.clientErrorCode) 
-            return res.status(400).json({
-                error: "Bad Request"
-            });
+        const [result, rowCount] = await db.query(query);
 
         if (result === null) {
             throw new Error();
         }
 
-        return res.status(200).json(result);
+        return res.status(200).json(
+            result.map((item) => {
+                const { first_name, last_name, message } = item;
+                return {
+                    firstName: first_name,
+                    lastName: last_name,
+                    message: message,
+                };
+            })
+        );
     
     } catch (error) {
         console.error(error);
@@ -86,16 +84,22 @@ guestRouter.get("/:guestId", async(req, res) => {
                 error: "Bad Request"
             });
 
-        const query = "SELECT first_name, last_name, message, phone_number FROM check_ins WHERE guest_id = $1;";
+        const query = "SELECT first_name, last_name, message FROM check_ins WHERE guest_id = $1;";
         const params = [guestIdINum,];
 
-        const result = await db.query(query, params);
-        if (!result || result.length == 0) 
+        const [result, rowCount] = await db.query(query, params);
+        if (!result || rowCount == 0) 
             return res.status(400).json({
                 error: "Bad Request"
             });
 
-        return res.status(200).json(result);
+        return res.status(200).json(result.map((item) => {
+            return {
+                firstName: item.first_name,
+                lastName: item.last_name,
+                message: item.message,
+            }
+        }));
 
     } catch (error) {
         console.error(error);
@@ -118,13 +122,6 @@ guestRouter.delete("/new-check-in", async(req, res) => {
         const mutate = "DELETE FROM check_ins WHERE id = $1 LIMIT 1;";
         const params = [checkInIdNum,];
         const rowsAffected = await db.mutate(mutate, params);
-
-
-        if (rowsAffected === db.clientErrorCode) {
-            return res.status(400).json({
-                error: "Bad Request"
-            });
-        }
 
         if (rowsAffected === 0) {
             return res.status(404).json({

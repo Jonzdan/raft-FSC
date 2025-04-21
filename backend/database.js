@@ -1,8 +1,6 @@
 import pg from 'pg';
 import fs from 'fs';
-const PGPASSWORD = process.env.MODE == 'dev'
-    ? fs.readFileSync(process.env.PGPASSFILE, 'utf-8').trim() 
-    : process.env.PGPASSWORD_LOCAL;
+const PGPASSWORD = process.env.MODE == 'dev' ? fs.readFileSync(process.env.PGPASSFILE, 'utf-8').trim() : process.env.PGPASSWORD_LOCAL;
 
 class DatabaseClient {
     constructor() {
@@ -18,7 +16,6 @@ class DatabaseClient {
             process.exit(1)
         })
         this.pool.once('open', () => console.log("Connected to db"));
-        this.clientErrorCode = -1;
         this.tablesInitialized = false;
     }
 
@@ -58,11 +55,11 @@ class DatabaseClient {
         }
 
         const paramsToUse = params || [];
-        if (!query) return this.clientErrorCode;
+        if (!query) return null;
 
         try {
             const { rows, rowCount } = await this.pool.query(query, paramsToUse);
-            return rows;
+            return [rows, rowCount];
 
         } catch (err) {
             console.error("Error occurred in function DatabaseClient.query", err);
@@ -76,8 +73,7 @@ class DatabaseClient {
         }
 
         const paramsToUse = params || [];
-        // Null = Interal Server Error, this.clientErrorCode = Invalid Request
-        if (!mutation) return this.clientErrorCode;
+        if (!mutation) return null;
 
         try {
             const { rowCount } = await this.pool.query(mutation, paramsToUse);

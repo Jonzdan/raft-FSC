@@ -27,12 +27,6 @@ userRouter.post("/signup", async(req, res) => {
             throw new Error();
         }
 
-        if (rowCount == db.clientErrorCode) {
-            return res.status(400).json({
-                error: "Bad Request"
-            });
-        }
-
         if (rowCount == 0)
             return res.status(409).json({
                 error: "Username already exists"
@@ -62,7 +56,7 @@ userRouter.post("/login", async(req, res) => {
         const query = "SELECT id, guestname, password FROM guests WHERE guestname = $1";
         const params = [guestname];
 
-        const result = await db.query(query, params);
+        const [result, rowCount] = await db.query(query, params);
 
         if (result == null) {
             return res.status(500).json({
@@ -70,9 +64,9 @@ userRouter.post("/login", async(req, res) => {
             });
         }
 
-        if (result == db.clientErrorCode) {
-            return res.status(400).json({
-                error: "Bad Request"
+        if (rowCount === 0) {
+            return res.status(401).json({
+                error: "Unauthorized"
             });
         }
 

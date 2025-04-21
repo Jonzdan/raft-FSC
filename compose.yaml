@@ -52,13 +52,20 @@ services:
     build: ./my-app
     ports:
       - "80:80"
-    links:
-      - "backend"
     volumes:
       - ./my-app/dist:/usr/share/nginx/html
       - ./nginx.conf:/etc/nginx/conf.d/default.conf
     depends_on:
       - backend
+    develop:
+      watch:
+        - action: sync
+          path: ./my-app
+          target: /frontend/my-app
+          ignore:
+            - node_modules/
+        - action: rebuild
+          path: package.json
 
 secrets:
   pg_password:
@@ -71,8 +78,4 @@ secrets:
 
 volumes:
   raft_db_data:
-
-
-
-
     
