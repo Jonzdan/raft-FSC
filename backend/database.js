@@ -1,6 +1,6 @@
 import pg from 'pg';
 import fs from 'fs';
-const PGPASSWORD = process.env.MODE == 'prod' ? fs.readFileSync(process.env.PGPASSFILE, 'utf-8').trim() : process.env.PGPASSWORD_LOCAL;
+const PGPASSWORD = process.env.MODE == 'dev' ? fs.readFileSync(process.env.PGPASSFILE, 'utf-8').trim() : process.env.PGPASSWORD_LOCAL;
 
 class DatabaseClient {
     constructor() {
