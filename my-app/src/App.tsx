@@ -1,18 +1,19 @@
-import { useState, ReactNode, useEffect, useRef, RefObject } from "react";
-import { useCurrentUser, UserProvider } from "./userContext";
+import { useState, ReactNode, useEffect, useRef } from "react";
+import { useCurrentUser, UserProvider, useLogout } from "./userContext";
 import { Link, useNavigate, Route, BrowserRouter, Routes } from "react-router-dom";
 import './App.css';
 import React from "react";
 
 export function Header() {
-  const { user, setUser } = useCurrentUser();
-  const isLoggedIn: boolean = user !== null;
+  const useUser = useCurrentUser();
+  const isLoggedIn: boolean = useUser.user !== null;
+  const logout = useLogout();
 
   async function handleLogoutClick(_e: React.MouseEvent) {
-    if (!setUser) {
+    if (!useUser.setUser) {
       throw new Error("useSetUser must be used within User Provider");
     }
-    setUser(null);
+    logout();
   }
 
   return (
@@ -82,7 +83,9 @@ export function LoginPage() {
     }
 
     try {
+      // const testUrl = "http://localhost:4000/user/login";
       const url = "/api/user/login";
+
       const response = await fetch(url, {
         method: "POST",
         body: JSON.stringify(formData),
@@ -159,6 +162,7 @@ export function useForm(initialState: any) {
     
     if (!(Object.keys(formData).includes(name))) {
       setCustomErrorTimeout("Unknown Form Field");
+      return;
     }
     setFormData((prev: any) => ({
       ...prev,
@@ -196,7 +200,6 @@ export function SignUpPage() {
   const [submitBtnMsg, setSubmitBtnMsg] = useState('Sign up');
   let navigate = useNavigate();
   const isLoggedIn = useUser.user !== null && useUser.user !== undefined;
-  console.log(useUser.user, isLoggedIn);
 
   useEffect(() => {
     if (isLoggedIn) {
@@ -260,40 +263,35 @@ export function SignUpPage() {
 }
 
 // Has an image behind it
-export function CheckInForm({ tableListData, setTableListData, tableCellId, setTableCellId }: any) {
-  const [formData, setFormData] = useState({
+export function CheckInForm({ setTableListData, tableCellId, setTableCellId }: any) {
+  const { formData, error, setCustomErrorTimeout, handleFormDataChange  } = useForm({
     firstName: '',
     lastName: '',
     message: '',
     phoneNumber: ''
   });
-  const [error, setError] = useState('');
-  const { user } = useCurrentUser();
-  const isLoggedIn = user !== null && user !== undefined;
-  let timeoutRef: RefObject<number | null> = useRef(null);
-
-  useEffect(() => {
-    return () => {
-      if (timeoutRef.current)
-        clearTimeout(timeoutRef.current);
-    }
-  }, []);
+  const userContext = useCurrentUser();
+  const isLoggedIn = userContext.user !== null && userContext.user !== undefined;
+  let logout = useLogout();
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    e.stopPropagation();
 
     // Post to /guest/new-check-in endpoint
     if (!isLoggedIn) {
-      setError("Not logged in");
+      setCustomErrorTimeout("Not logged in");
       return; 
     }
 
     if (!formData.firstName || !formData.lastName || !formData.message || !formData.phoneNumber) {
-      setError("Invalid form data");
+      setCustomErrorTimeout("Invalid form data");
       return;
     }
 
     const url = "/api/guest/new-check-in";
+    // const testUrl = "http://localhost:4000/guest/new-check-in";
+    
     try {
       const response = await fetch(url, {
         method: "POST",
@@ -303,15 +301,19 @@ export function CheckInForm({ tableListData, setTableListData, tableCellId, setT
         }
       });
       if (!response.ok) {
-        throw new Error(`Response status: ${response.status}`);
+        if (response.status === 401) {
+          logout();
+        }
+        const json = await response.json();
+        throw new Error(json.error);
       }
 
       // Update Check In Table
       const newTableCellId = tableCellId;
       setTableCellId((n: number) => n + 1);
 
-      setTableListData([
-        ...tableListData,
+      setTableListData((prev: checkInDataFormat[]) => [
+        ...prev,
         { 
           id: newTableCellId,
           firstName: formData.firstName,
@@ -322,24 +324,13 @@ export function CheckInForm({ tableListData, setTableListData, tableCellId, setT
 
 
     } catch (error: any) {
-      setError(error.message);
+      setCustomErrorTimeout(error.message);
       console.error(error.message);
     }
   }
 
-  function handleFormDataChange(e: React.ChangeEvent<HTMLFormElement>) {
-    const {name, value} = e.target;
-    if (!(Object.keys(formData).includes(name))) {
-      setError("Unknown form field");
-      timeoutRef.current = setTimeout(() => {
-        setError("");
-        timeoutRef.current = null;
-      }, 2000);
-    }
-    setFormData(prev => ({
-      ...prev,
-      [name]: value,
-    }))
+  async function handleFormOnChange(_e: any) {
+    handleFormDataChange(_e);
   }
 
   if (!isLoggedIn) {
@@ -351,7 +342,7 @@ export function CheckInForm({ tableListData, setTableListData, tableCellId, setT
 
   return (
     <div className="form-wrapper">
-      <form onSubmit={handleSubmit} onChange={handleFormDataChange} className="form">
+      <form onSubmit={handleSubmit} onChange={handleFormOnChange} className="form">
         <h2> Submit a check-in </h2>
         <label htmlFor="firstName">First Name </label>
         <input type="text" name="firstName" id="" />
@@ -397,46 +388,78 @@ export function CheckInTable({ tableListData }: any) {
 }
 
 export function MyCheckinPage(): ReactNode | Promise<ReactNode> {
-  const { user } = useCurrentUser();
+  const useUser = useCurrentUser();
   const [checkInData, setCheckInData] = useState([]);
-  const checkinId = useRef(0);
+  let logout = useLogout();
 
   useEffect(() => {
-    if (user === null || user === undefined) {
+    if (useUser.user === null || useUser.user === undefined) {
       return;
     }
 
+    const controller = new AbortController();
+    const signal = controller.signal;
+
     const fetchGuestData = async () => {
-      const guestId = user;
+      const guestId = useUser.user;
       const url = `/api/guest/${guestId}`;
-      const response = await fetch(url);
+      // const testUrl = `http://localhost:4000/guest/${guestId}`
       try {
+        const response = await fetch(url, {signal: signal});
         if (!response.ok) {
           throw new Error(`Response status: ${response.status}`);
         }
   
         const data = await response.json();
-        setCheckInData(data.map((item: any) => {
-          const id = checkinId.current;
-          checkinId.current++;
-          return {
-            id: id,
-            ...item
-          }
-        })); 
-      } catch (error) {
-        console.error(error);
+        setCheckInData(data);
+      } catch (error: any) {
+        if (error.name !== "AbortError")
+          console.error(error);
       }
     }
     fetchGuestData();
-  }, [user])
+
+    return () => {
+      controller.abort();
+    }
+  }, [useUser.user])
+
+  async function handleDeleteCheckin(key: string) {
+    const url = `/api/guest/new-check-in`;
+    try {
+      const response = await fetch(url, {
+        method: 'DELETE',
+        body: JSON.stringify({
+          checkInId: key, 
+        }),
+        credentials: 'include'
+      });
+      if (!response.ok) {
+        if (response.status === 401) {
+          logout();
+        }
+        throw new Error(JSON.stringify(response.body));
+      }
+      
+      setCheckInData((prev) => 
+        prev ? prev.filter(
+          (x: checkInDataFormat) => x.id !== key
+        ) : []
+      );
+
+    } catch (error) {
+      console.error(error);
+    } 
+
+  }
 
   return (
     <>
+      <h3> My Checkins </h3>
       <ul>
         {
           checkInData.length > 0 ? 
-          checkInData.map(item => (<li> {item} </li>)) :
+          checkInData.map((item: checkInDataFormat) => (<li key={item.id}> {`Check-in Id: ${item.id}; Name: ${item.firstName} ${item.lastName};  Message: ${item.message}`} <span className="hover-link" key={item.id} onClick={() => handleDeleteCheckin(item.id)}> X </span> </li>)) :
           (<> <h2> No checkins available yet </h2> </>)
         }
       </ul>
@@ -444,7 +467,7 @@ export function MyCheckinPage(): ReactNode | Promise<ReactNode> {
   );
 }
 
-interface tableDataCell {
+interface checkInDataFormat {
   id: string
   firstName: string,
   lastName: string,
@@ -456,35 +479,45 @@ export function LandingPage(): ReactNode | Promise<ReactNode> {
   const [tableCellId, setTableCellId] = useState(0);
 
   useEffect(() => {
+    const controller = new AbortController();
+    const signal = controller.signal;
     async function fetchTableData() {
       const url = "/api/guest/all";
-      const response = await fetch(url);
-      if (!response.ok) {
-        throw new Error("Failed to fetch all guest data");
-      }
-
-      const json = await response.json();
-      setTableListData(json.map((item: tableDataCell) => {
-        const itemIdToDisplay = item.id ? item.id : tableCellId;
-        if (!item.id) {
-          setTableCellId(n => n + 1);
+      try {
+        const response = await fetch(url, {signal: signal});
+        if (!response.ok) {
+          throw new Error("Failed to fetch all guest data");
         }
-        return (
-          <tr key={itemIdToDisplay}>
-            <td>{item.firstName}</td>
-            <td>{item.lastName}</td>
-            <td>{item.message}</td>
-          </tr>
-        );
-      }));
+  
+        const json = await response.json();
+        setTableListData(json.map((item: checkInDataFormat) => {
+          const itemIdToDisplay = item.id ? item.id : tableCellId;
+          if (!item.id) {
+            setTableCellId(n => n + 1);
+          }
+          return (
+            <tr key={itemIdToDisplay}>
+              <td>{item.firstName}</td>
+              <td>{item.lastName}</td>
+              <td>{item.message}</td>
+            </tr>
+          );
+        })); 
+      } catch (error: any) {
+        if (error.name !== 'AbortError')
+          console.error(error);
+      }
     }
     fetchTableData();
+    return () => {
+      controller.abort();
+    }
   }, []);
 
   return (
     <>
       <Header />
-      <CheckInForm tableListData={tableListData} setTableListData={setTableListData} tableCellId={tableCellId} setTableCellId={setTableCellId} />
+      <CheckInForm setTableListData={setTableListData} tableCellId={tableCellId} setTableCellId={setTableCellId} />
       <CheckInTable tableListData={tableListData} />
       <Footer />
     </>

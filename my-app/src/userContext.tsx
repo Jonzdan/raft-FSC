@@ -30,3 +30,11 @@ export function UserProvider({children}: userProps): JSX.Element  {
 }
 
 export const useCurrentUser = () => useContext(UserContext);
+export const useLogout = () => {
+    const context = useContext(UserContext);
+
+    return () => {
+        context.setUser(null)
+        sessionStorage.removeItem("user");
+    }
+}

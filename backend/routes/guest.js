@@ -6,20 +6,20 @@ guestRouter.post("/new-check-in", async(req, res) => {
     const body_data = req.body;
     try {
         if (!req.session || !req.session.guestId)
-            return res.status(400).json({
+            return res.status(401).json({
                 error: "Invalid Request"
             });
 
         const guestId = req.session.guestId;
         if (!guestId || guestId.length == 0) {
-            return res.status(400).json({
+            return res.status(401).json({
                 error: "Invalid Request"
             });
         }
 
         const {firstName, lastName, message, phoneNumber} = body_data;
         if (!firstName || !lastName || !message || !phoneNumber)
-            return res.status(401).json({
+            return res.status(400).json({
                 error: "Missing required fields"
             });
 
@@ -56,6 +56,7 @@ guestRouter.get("/all", async(req, res) => {
             throw new Error();
         }
 
+        res.setHeader('Content-Type', 'application/json');
         return res.status(200).json(
             result.map((item) => {
                 const { first_name, last_name, message } = item;
@@ -84,17 +85,19 @@ guestRouter.get("/:guestId", async(req, res) => {
                 error: "Bad Request"
             });
 
-        const query = "SELECT first_name, last_name, message FROM check_ins WHERE guest_id = $1;";
+        const query = "SELECT first_name, last_name, message, id FROM check_ins WHERE guest_id = $1;";
         const params = [guestIdINum,];
 
         const [result, rowCount] = await db.query(query, params);
         if (!result || rowCount == 0) 
-            return res.status(400).json({
-                error: "Bad Request"
+            return res.status(404).json({
+                error: "Resource Not Found"
             });
 
+        res.setHeader('Content-Type', 'application/json');
         return res.status(200).json(result.map((item) => {
             return {
+                id: item.id,
                 firstName: item.first_name,
                 lastName: item.last_name,
                 message: item.message,
@@ -112,14 +115,21 @@ guestRouter.get("/:guestId", async(req, res) => {
 guestRouter.delete("/new-check-in", async(req, res) => {
     const body = req.body;
     try {
+        const guestId = req.session.guestId;
+        if (!guestId || guestId.length == 0) {
+            return res.status(401).json({
+                error: "Invalid Request"
+            });
+        }
+
         const { checkInId } = body;
         const checkInIdNum = parseInt(checkInId)
         if (!checkInId || isNaN(checkInIdNum))
-            return res.status(401).json({
+            return res.status(400).json({
                 error: "Bad Request"
             });
 
-        const mutate = "DELETE FROM check_ins WHERE id = $1 LIMIT 1;";
+        const mutate = "DELETE FROM check_ins WHERE id = $1;";
         const params = [checkInIdNum,];
         const rowsAffected = await db.mutate(mutate, params);
 

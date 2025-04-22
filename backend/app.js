@@ -1,7 +1,7 @@
 import 'dotenv/config';
 import express from 'express';
 import cookie_parser from 'cookie-parser';
-import session from 'express-session';
+import session, { MemoryStore } from 'express-session';
 import pgConnect from 'connect-pg-simple';
 import { db } from './database.js';
 const LOCAL_PORT = 4000;
