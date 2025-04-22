@@ -1,0 +1,81 @@
+# https://docs.docker.com/compose/how-tos/use-secrets/
+
+version: "3.8"
+services:
+  backend:
+    image: raft-app
+    build:
+      context: ./backend
+      dockerfile: dockerfile
+    ports:
+      - "4000:4000"
+    volumes:
+      - ./backend:/usr/src/app
+      - /usr/src/app/node_modules
+    environment:
+      MODE: dev
+      PGUSER: jonzd
+      PGPASSFILE: /run/secrets/pg_password
+      PGHOST: postgres
+      PGPORT: 5432
+      PGDATABASE: raft
+      SESSION_SECRET_KEY: /run/secrets/session_key
+      COOKIE_PARSER_KEY: /run/secrets/cookie_parser_key
+    depends_on: 
+      postgres:
+        condition: service_healthy
+    secrets:
+      - pg_password
+      - session_key
+      - cookie_parser_key
+
+  postgres:
+    image: "postgres:latest"
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: jonzd
+      POSTGRES_PASSWORD_FILE: /run/secrets/pg_password
+      POSTGRES_DB: raft
+    volumes:
+      - raft_db_data:/var/lib/postgresql/data
+    secrets:
+      - pg_password
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "jonzd", "-d", "raft", "-h", "localhost", "-p", "5432"]
+      interval: 10s
+      retries: 5
+      timeout: 5s
+      start_period: 5s
+
+  frontend:
+    build: ./my-app
+    ports:
+      - "80:80"
+    volumes:
+      - ./my-app/dist:/usr/share/nginx/html
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf
+    depends_on:
+      - backend
+    # develop:
+    #   watch:
+    #     - action: sync
+    #       path: ./my-app
+    #       target: /frontend/my-app
+    #       ignore:
+    #         - node_modules/
+    #     - action: rebuild
+    #       path: package.json
+
+secrets:
+  pg_password:
+    file: ./secrets/pg_password.txt
+  session_key:
+    file: ./secrets/session_key.txt
+  cookie_parser_key:
+    file: ./secrets/cookie_parser_key.txt
+  
+
+volumes:
+  raft_db_data:
+    
