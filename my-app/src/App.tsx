@@ -263,7 +263,7 @@ export function SignUpPage() {
 }
 
 // Has an image behind it
-export function CheckInForm({ setTableListData, tableCellId, setTableCellId }: any) {
+export function CheckInForm({ setTableListData, tableCellId, setTableCellId, convertListOfObjectsToJSX }: any) {
   const { formData, error, setCustomErrorTimeout, handleFormDataChange  } = useForm({
     firstName: '',
     lastName: '',
@@ -271,7 +271,7 @@ export function CheckInForm({ setTableListData, tableCellId, setTableCellId }: a
     phoneNumber: ''
   });
   const userContext = useCurrentUser();
-  const isLoggedIn = userContext.user !== null && userContext.user !== undefined;
+  let isLoggedIn = userContext.user !== null && userContext.user !== undefined;
   let logout = useLogout();
 
   async function handleSubmit(e: React.FormEvent) {
@@ -312,7 +312,7 @@ export function CheckInForm({ setTableListData, tableCellId, setTableCellId }: a
       const newTableCellId = tableCellId;
       setTableCellId((n: number) => n + 1);
 
-      setTableListData((prev: checkInDataFormat[]) => [
+      setTableListData((prev: checkInDataFormat[]) => convertListOfObjectsToJSX([
         ...prev,
         { 
           id: newTableCellId,
@@ -320,7 +320,7 @@ export function CheckInForm({ setTableListData, tableCellId, setTableCellId }: a
           lastName: formData.lastName,
           message: formData.message,
         }
-      ])
+      ]));
 
 
     } catch (error: any) {
@@ -333,7 +333,7 @@ export function CheckInForm({ setTableListData, tableCellId, setTableCellId }: a
     handleFormDataChange(_e);
   }
 
-  if (!isLoggedIn) {
+  if (    !isLoggedIn) {
     return (
       <>
       </>
@@ -490,19 +490,7 @@ export function LandingPage(): ReactNode | Promise<ReactNode> {
         }
   
         const json = await response.json();
-        setTableListData(json.map((item: checkInDataFormat) => {
-          const itemIdToDisplay = item.id ? item.id : tableCellId;
-          if (!item.id) {
-            setTableCellId(n => n + 1);
-          }
-          return (
-            <tr key={itemIdToDisplay}>
-              <td>{item.firstName}</td>
-              <td>{item.lastName}</td>
-              <td>{item.message}</td>
-            </tr>
-          );
-        })); 
+        convertListOfObjectsToJSX(json);
       } catch (error: any) {
         if (error.name !== 'AbortError')
           console.error(error);
@@ -514,10 +502,26 @@ export function LandingPage(): ReactNode | Promise<ReactNode> {
     }
   }, []);
 
+  function convertListOfObjectsToJSX(listOfObjects: any) {
+    return listOfObjects.map((item: checkInDataFormat) => {
+      const itemIdToDisplay = item.id ? item.id : tableCellId;
+      if (!item.id) {
+        setTableCellId(n => n + 1);
+      }
+      return (
+        <tr key={itemIdToDisplay}>
+          <td>{item.firstName}</td>
+          <td>{item.lastName}</td>
+          <td>{item.message}</td>
+        </tr>
+      );
+    });
+  }
+
   return (
     <>
       <Header />
-      <CheckInForm setTableListData={setTableListData} tableCellId={tableCellId} setTableCellId={setTableCellId} />
+      <CheckInForm setTableListData={setTableListData} tableCellId={tableCellId} setTableCellId={setTableCellId} convertListOfObjectsToJSX={convertListOfObjectsToJSX}/>
       <CheckInTable tableListData={tableListData} />
       <Footer />
     </>
