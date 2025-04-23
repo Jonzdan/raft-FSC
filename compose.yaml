@@ -1,4 +1,7 @@
 # https://docs.docker.com/compose/how-tos/use-secrets/
+# https://stackoverflow.com/questions/44586218/heroku-nginx-on-port-80
+# https://stackoverflow.com/questions/69444225/how-do-i-deploy-to-heroku-using-vite
+# https://stackoverflow.com/questions/64386645/error-user-directive-makes-sense-only-if-the-master-process-runs-with-super-u
 
 version: "3.8"
 services:

@@ -79,7 +79,6 @@ userRouter.post("/login", async(req, res) => {
             });
         }
 
-        req.session.guestId = guestId;
         return res.status(200).json({
             "gid": guestId,
         });

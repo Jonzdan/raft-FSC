@@ -4,13 +4,21 @@ const PGPASSWORD = process.env.MODE == 'dev' ? fs.readFileSync(process.env.PGPAS
 
 class DatabaseClient {
     constructor() {
-        this.pool = new pg.Pool({
-            user: process.env.PGUSER,
-            password: PGPASSWORD,
-            host: process.env.PGHOST,
-            port: process.env.PGPORT,
-            database: process.env.PGDATABASE,
-        });
+        const dbUrl = process.env.DATABASE_URL;  // Heroku Specific
+        if (dbUrl) {
+            this.pool = new pg.Pool({
+                connectionString: dbUrl,
+                ssl: { rejectUnauthorized: false },
+            })
+        } else {
+            this.pool = new pg.Pool({
+                user: process.env.PGUSER,
+                password: PGPASSWORD,
+                host: process.env.PGHOST,
+                port: process.env.PGPORT,
+                database: process.env.PGDATABASE,
+            });
+        }
         this.pool.on("error", (err, client) => {
             console.error("Unexpected error in db pool", err)
             process.exit(1)

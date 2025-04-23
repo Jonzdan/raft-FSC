@@ -5,19 +5,14 @@ import { db } from '../database.js';
 guestRouter.post("/new-check-in", async(req, res) => {
     const body_data = req.body;
     try {
-        if (!req.session || !req.session.guestId)
-            return res.status(401).json({
-                error: "Invalid Request"
-            });
+        const { firstName, lastName, message, phoneNumber, guestId } = body_data;
 
-        const guestId = req.session.guestId;
         if (!guestId || guestId.length == 0) {
             return res.status(401).json({
                 error: "Invalid Request"
             });
         }
 
-        const {firstName, lastName, message, phoneNumber} = body_data;
         if (!firstName || !lastName || !message || !phoneNumber)
             return res.status(400).json({
                 error: "Missing required fields"
@@ -115,14 +110,14 @@ guestRouter.get("/:guestId", async(req, res) => {
 guestRouter.delete("/new-check-in", async(req, res) => {
     const body = req.body;
     try {
-        const guestId = req.session.guestId;
+        console.log(req.body);
+        const { checkInId, guestId } = body;
         if (!guestId || guestId.length == 0) {
             return res.status(401).json({
                 error: "Invalid Request"
             });
         }
 
-        const { checkInId } = body;
         const checkInIdNum = parseInt(checkInId)
         if (!checkInId || isNaN(checkInIdNum))
             return res.status(400).json({

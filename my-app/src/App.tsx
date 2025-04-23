@@ -18,6 +18,7 @@ export function Header() {
 
   return (
     <header>
+      <h5> Lorem, ipsum dolor sit amet consectetur adipisicing elit. Illum amet dolor quo perferendis quod, non ea recusandae, suscipit inventore asperiores a iste ducimus velit praesentium, quae ullam iusto sint quidem?</h5>
       <div className="header-links">
         {
           isLoggedIn ? (
@@ -43,7 +44,6 @@ export function Header() {
           )
         }
       </div>
-      <h5> Lorem, ipsum dolor sit amet consectetur adipisicing elit. Illum amet dolor quo perferendis quod, non ea recusandae, suscipit inventore asperiores a iste ducimus velit praesentium, quae ullam iusto sint quidem?</h5>
     </header>
   )
 }
@@ -122,16 +122,16 @@ export function LoginPage() {
 
   return (
     <div className="form-wrapper">
-      <h3> Login </h3>
       <form onSubmit={handleSubmit} className="form">
+        <h3> Login </h3>
         <label htmlFor="username">Username</label>
         <input type="text" name="username" value={formData.username} onChange={handleFormDataChange} />
         <label htmlFor="password">Password</label>
         <input type="password" name="password" value={formData.password} onChange={handleFormDataChange} />
         {error && <h4> {error} </h4>}
         <button type="submit" className="submit-btn">Log In</button>
+        <Link to="../signup" className="alt-link"> Click here to sign up </Link>
       </form>
-      <Link to="../signup" className="alt-link"> Click here to sign up </Link>
     </div>
   );
 }
@@ -246,8 +246,8 @@ export function SignUpPage() {
 
   return (
     <div className="form-wrapper">
-      <h3> Sign up </h3>
       <form onSubmit={handleSubmit} className="form">
+        <h3> Sign up </h3>
         <label htmlFor="username">Username</label>
         <input type="text" name="username" value={formData.username} onChange={handleFormDataChange} />
         <label htmlFor="password">Password</label>
@@ -256,8 +256,8 @@ export function SignUpPage() {
         <input type="password" name="passwordConfirm" value={formData.passwordConfirm} onChange={handleFormDataChange} />
         {error && <h4> {error} </h4>}
         <button type="submit" className="submit-btn">{submitBtnMsg}</button>
+        <Link to="../login" className="alt-link"> Click here to login </Link>
       </form>
-      <Link to="../login" className="alt-link"> Click here to login </Link>
     </div>
   );
 }
@@ -316,15 +316,15 @@ export function CheckInForm({ setTableListData, tableCellId, setTableCellId, con
       const newTableCellId = tableCellId;
       setTableCellId((n: number) => n + 1);
 
-      setTableListData((prev: checkInDataFormat[]) => convertListOfObjectsToJSX([
+      setTableListData((prev: checkInDataFormat[]) => [
         ...prev,
-        { 
+        convertListOfObjectsToJSX({ 
           id: newTableCellId,
           firstName: formData.firstName,
           lastName: formData.lastName,
           message: formData.message,
-        }
-      ]));
+        })
+      ]);
 
 
     } catch (error: any) {
@@ -337,17 +337,11 @@ export function CheckInForm({ setTableListData, tableCellId, setTableCellId, con
     handleFormDataChange(_e);
   }
 
-  if (    !isLoggedIn) {
-    return (
-      <>
-      </>
-    );
-  }
 
   return (
-    <div id="checkinForm" className="form-wrapper">
-      <img src="https://fiverr-res.cloudinary.com/images/q_auto,f_auto/gigs/124714084/original/762ca0507089ff647bf1c46d1c123e6603af95dc/send-20-high-quality-4k-random-wallpapers.jpg" alt=""/>
-      <form onSubmit={handleSubmit} onChange={handleFormOnChange} className="form">
+    <div id="checkinForm" className="checkin-form-wrapper">
+      <img id="checkinFormImg" src="https://fiverr-res.cloudinary.com/images/q_auto,f_auto/gigs/124714084/original/762ca0507089ff647bf1c46d1c123e6603af95dc/send-20-high-quality-4k-random-wallpapers.jpg" alt=""/>
+      <form onSubmit={handleSubmit} onChange={handleFormOnChange} className="checkin-form">
         <h2> Submit a check-in </h2>
         <label htmlFor="firstName">First Name </label>
         <input type="text" name="firstName" id="" />
@@ -359,7 +353,7 @@ export function CheckInForm({ setTableListData, tableCellId, setTableCellId, con
         <input type="tel" name="phoneNumber" id="" />
         <button type="submit" className="submit-btn"> Submit </button>
         {
-          (error && error.length > 0) && <h4> {error} </h4>
+          (error && error.length > 0) && <h4 className="error"> {error} </h4>
         }
     </form>
     </div>
@@ -368,7 +362,7 @@ export function CheckInForm({ setTableListData, tableCellId, setTableCellId, con
 
 export function CheckInTable({ tableListData }: any) {
   return (
-    <>
+    <div className="table">
       <h2> Past Check-in Records</h2>
       <table>
         <thead>
@@ -388,7 +382,7 @@ export function CheckInTable({ tableListData }: any) {
           )}
         </tbody>
       </table>
-    </>
+    </div>
   );
 }
 
@@ -437,7 +431,10 @@ export function MyCheckinPage(): ReactNode | Promise<ReactNode> {
           checkInId: key, 
           guestId: useUser.user,
         }),
-        credentials: 'include'
+        credentials: 'include',
+        headers: {
+          "Content-Type": "application/json",
+        }
       });
       if (!response.ok) {
         throw new Error(JSON.stringify(response.body));
@@ -456,16 +453,16 @@ export function MyCheckinPage(): ReactNode | Promise<ReactNode> {
   }
 
   return (
-    <>
+    <div className={checkInData.length > 0 ? "checkin_content" : "checkin_empty"}>
       <h3> My Checkins </h3>
       <ul>
         {
           checkInData.length > 0 ? 
-          checkInData.map((item: checkInDataFormat) => (<li key={item.id}> {`Check-in Id: ${item.id}; Name: ${item.firstName} ${item.lastName};  Message: ${item.message}`} <span className="hover-link" key={item.id} onClick={() => handleDeleteCheckin(item.id)}> X </span> </li>)) :
+          checkInData.map((item: checkInDataFormat) => (<li key={item.id}> {`Check-in Id: ${item.id}; Name: ${item.firstName} ${item.lastName};  Message: ${item.message}`} <span className="hover-link" key={item.id} onClick={() => handleDeleteCheckin(item.id)}> &#10006; </span> </li>)) :
           (<> <h2> No checkins available yet </h2> </>)
         }
       </ul>
-    </>
+    </div>
   );
 }
 
@@ -492,7 +489,8 @@ export function LandingPage(): ReactNode | Promise<ReactNode> {
         }
   
         const json = await response.json();
-        convertListOfObjectsToJSX(json);
+        const jsxJson = convertListOfObjectsToJSX(json);
+        setTableListData(jsxJson);
       } catch (error: any) {
         if (error.name !== 'AbortError')
           console.error(error);
@@ -521,12 +519,12 @@ export function LandingPage(): ReactNode | Promise<ReactNode> {
   }
 
   return (
-    <>
+    <div className="landingPage">
       <Header />
       <CheckInForm setTableListData={setTableListData} tableCellId={tableCellId} setTableCellId={setTableCellId} convertListOfObjectsToJSX={convertListOfObjectsToJSX}/>
       <CheckInTable tableListData={tableListData} />
       <Footer />
-    </>
+    </div>
   )
 }
 
