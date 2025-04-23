@@ -34,6 +34,25 @@ body {
   min-height: 324px;
 }
 
+#checkinForm {
+  background-color: inherit;
+  box-shadow: none;
+  color: #FFF;
+}
+
+.form-wrapper img {
+  position: absolute;
+  z-index: -1;
+  width: 45%;
+  height: 40%;
+  left: -500%;
+  right: -500%;
+  margin: auto;
+  padding: 1em;
+  box-sizing: border-box;
+  border-radius: 10%;
+}
+
 .form-wrapper * {
   flex-grow: 1;
   flex-wrap: wrap;

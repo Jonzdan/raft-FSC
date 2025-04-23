@@ -84,7 +84,7 @@ export function LoginPage() {
 
     try {
       // const testUrl = "http://localhost:4000/user/login";
-      const url = "/api/user/login";
+      const url = "/user/login";
 
       const response = await fetch(url, {
         method: "POST",
@@ -216,7 +216,7 @@ export function SignUpPage() {
     }
 
     try {
-      const url = "/api/user/signup/";
+      const url = "/user/signup/";
       const response = await fetch(url, {
         method: "POST",
         body: JSON.stringify({
@@ -289,16 +289,20 @@ export function CheckInForm({ setTableListData, tableCellId, setTableCellId }: a
       return;
     }
 
-    const url = "/api/guest/new-check-in";
+    const url = "/guest/new-check-in";
     // const testUrl = "http://localhost:4000/guest/new-check-in";
     
     try {
       const response = await fetch(url, {
         method: "POST",
-        body: JSON.stringify(formData),
+        body: JSON.stringify({
+          ...formData,
+          guestId: userContext.user,
+        }),
         headers: {
           'Content-Type': 'application/json'
-        }
+        },
+        credentials: 'include',
       });
       if (!response.ok) {
         if (response.status === 401) {
@@ -341,7 +345,8 @@ export function CheckInForm({ setTableListData, tableCellId, setTableCellId }: a
   }
 
   return (
-    <div className="form-wrapper">
+    <div id="checkinForm" className="form-wrapper">
+      <img src="https://fiverr-res.cloudinary.com/images/q_auto,f_auto/gigs/124714084/original/762ca0507089ff647bf1c46d1c123e6603af95dc/send-20-high-quality-4k-random-wallpapers.jpg" alt=""/>
       <form onSubmit={handleSubmit} onChange={handleFormOnChange} className="form">
         <h2> Submit a check-in </h2>
         <label htmlFor="firstName">First Name </label>
@@ -390,7 +395,6 @@ export function CheckInTable({ tableListData }: any) {
 export function MyCheckinPage(): ReactNode | Promise<ReactNode> {
   const useUser = useCurrentUser();
   const [checkInData, setCheckInData] = useState([]);
-  let logout = useLogout();
 
   useEffect(() => {
     if (useUser.user === null || useUser.user === undefined) {
@@ -402,7 +406,7 @@ export function MyCheckinPage(): ReactNode | Promise<ReactNode> {
 
     const fetchGuestData = async () => {
       const guestId = useUser.user;
-      const url = `/api/guest/${guestId}`;
+      const url = `guest/${guestId}`;
       // const testUrl = `http://localhost:4000/guest/${guestId}`
       try {
         const response = await fetch(url, {signal: signal});
@@ -425,19 +429,17 @@ export function MyCheckinPage(): ReactNode | Promise<ReactNode> {
   }, [useUser.user])
 
   async function handleDeleteCheckin(key: string) {
-    const url = `/api/guest/new-check-in`;
+    const url = `/guest/new-check-in`;
     try {
       const response = await fetch(url, {
         method: 'DELETE',
         body: JSON.stringify({
           checkInId: key, 
+          guestId: useUser.user,
         }),
         credentials: 'include'
       });
       if (!response.ok) {
-        if (response.status === 401) {
-          logout();
-        }
         throw new Error(JSON.stringify(response.body));
       }
       
@@ -482,7 +484,7 @@ export function LandingPage(): ReactNode | Promise<ReactNode> {
     const controller = new AbortController();
     const signal = controller.signal;
     async function fetchTableData() {
-      const url = "/api/guest/all";
+      const url = "/guest/all";
       try {
         const response = await fetch(url, {signal: signal});
         if (!response.ok) {
