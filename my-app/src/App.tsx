@@ -18,6 +18,7 @@ export function Header() {
 
   return (
     <header>
+      <h5> Lorem, ipsum dolor sit amet consectetur adipisicing elit. Illum amet dolor quo perferendis quod, non ea recusandae, suscipit inventore asperiores a iste ducimus velit praesentium, quae ullam iusto sint quidem?</h5>
       <div className="header-links">
         {
           isLoggedIn ? (
@@ -43,7 +44,6 @@ export function Header() {
           )
         }
       </div>
-      <h5> Lorem, ipsum dolor sit amet consectetur adipisicing elit. Illum amet dolor quo perferendis quod, non ea recusandae, suscipit inventore asperiores a iste ducimus velit praesentium, quae ullam iusto sint quidem?</h5>
     </header>
   )
 }
@@ -84,7 +84,7 @@ export function LoginPage() {
 
     try {
       // const testUrl = "http://localhost:4000/user/login";
-      const url = "/api/user/login";
+      const url = "/user/login";
 
       const response = await fetch(url, {
         method: "POST",
@@ -122,16 +122,16 @@ export function LoginPage() {
 
   return (
     <div className="form-wrapper">
-      <h3> Login </h3>
       <form onSubmit={handleSubmit} className="form">
+        <h3> Login </h3>
         <label htmlFor="username">Username</label>
         <input type="text" name="username" value={formData.username} onChange={handleFormDataChange} />
         <label htmlFor="password">Password</label>
         <input type="password" name="password" value={formData.password} onChange={handleFormDataChange} />
         {error && <h4> {error} </h4>}
         <button type="submit" className="submit-btn">Log In</button>
+        <Link to="../signup" className="alt-link"> Click here to sign up </Link>
       </form>
-      <Link to="../signup" className="alt-link"> Click here to sign up </Link>
     </div>
   );
 }
@@ -216,7 +216,7 @@ export function SignUpPage() {
     }
 
     try {
-      const url = "/api/user/signup/";
+      const url = "/user/signup/";
       const response = await fetch(url, {
         method: "POST",
         body: JSON.stringify({
@@ -246,8 +246,8 @@ export function SignUpPage() {
 
   return (
     <div className="form-wrapper">
-      <h3> Sign up </h3>
       <form onSubmit={handleSubmit} className="form">
+        <h3> Sign up </h3>
         <label htmlFor="username">Username</label>
         <input type="text" name="username" value={formData.username} onChange={handleFormDataChange} />
         <label htmlFor="password">Password</label>
@@ -256,14 +256,14 @@ export function SignUpPage() {
         <input type="password" name="passwordConfirm" value={formData.passwordConfirm} onChange={handleFormDataChange} />
         {error && <h4> {error} </h4>}
         <button type="submit" className="submit-btn">{submitBtnMsg}</button>
+        <Link to="../login" className="alt-link"> Click here to login </Link>
       </form>
-      <Link to="../login" className="alt-link"> Click here to login </Link>
     </div>
   );
 }
 
 // Has an image behind it
-export function CheckInForm({ setTableListData, tableCellId, setTableCellId, convertListOfObjectsToJSX }: any) {
+export function CheckInForm({ setTableListData, tableCellId, setTableCellId }: any) {
   const { formData, error, setCustomErrorTimeout, handleFormDataChange  } = useForm({
     firstName: '',
     lastName: '',
@@ -289,16 +289,20 @@ export function CheckInForm({ setTableListData, tableCellId, setTableCellId, con
       return;
     }
 
-    const url = "/api/guest/new-check-in";
+    const url = "/guest/new-check-in";
     // const testUrl = "http://localhost:4000/guest/new-check-in";
     
     try {
       const response = await fetch(url, {
         method: "POST",
-        body: JSON.stringify(formData),
+        body: JSON.stringify({
+          ...formData,
+          guestId: userContext.user,
+        }),
         headers: {
           'Content-Type': 'application/json'
-        }
+        },
+        credentials: 'include',
       });
       if (!response.ok) {
         if (response.status === 401) {
@@ -312,7 +316,7 @@ export function CheckInForm({ setTableListData, tableCellId, setTableCellId, con
       const newTableCellId = tableCellId;
       setTableCellId((n: number) => n + 1);
 
-      setTableListData((prev: checkInDataFormat[]) => convertListOfObjectsToJSX([
+      setTableListData((prev: checkInDataFormat[]) => [
         ...prev,
         { 
           id: newTableCellId,
@@ -320,7 +324,7 @@ export function CheckInForm({ setTableListData, tableCellId, setTableCellId, con
           lastName: formData.lastName,
           message: formData.message,
         }
-      ]));
+      ]);
 
 
     } catch (error: any) {
@@ -333,16 +337,11 @@ export function CheckInForm({ setTableListData, tableCellId, setTableCellId, con
     handleFormDataChange(_e);
   }
 
-  if (    !isLoggedIn) {
-    return (
-      <>
-      </>
-    );
-  }
 
   return (
-    <div className="form-wrapper">
-      <form onSubmit={handleSubmit} onChange={handleFormOnChange} className="form">
+    <div id="checkinForm" className="checkin-form-wrapper">
+      <img id="checkinFormImg" src="https://fiverr-res.cloudinary.com/images/q_auto,f_auto/gigs/124714084/original/762ca0507089ff647bf1c46d1c123e6603af95dc/send-20-high-quality-4k-random-wallpapers.jpg" alt=""/>
+      <form onSubmit={handleSubmit} onChange={handleFormOnChange} className="checkin-form">
         <h2> Submit a check-in </h2>
         <label htmlFor="firstName">First Name </label>
         <input type="text" name="firstName" id="" />
@@ -354,16 +353,22 @@ export function CheckInForm({ setTableListData, tableCellId, setTableCellId, con
         <input type="tel" name="phoneNumber" id="" />
         <button type="submit" className="submit-btn"> Submit </button>
         {
-          (error && error.length > 0) && <h4> {error} </h4>
+          (error && error.length > 0) && <h4 className="error"> {error} </h4>
         }
     </form>
     </div>
   )
 }
 
-export function CheckInTable({ tableListData }: any) {
+export function CheckInTable({ tableListData , convertListOfObjectsOrObjectToJSX }: any) {
+  const [jsxTableListData, setJsxTableListData] = useState([]);
+  useEffect(() => {
+    setJsxTableListData(convertListOfObjectsOrObjectToJSX(tableListData))
+  }, [tableListData])
+
+
   return (
-    <>
+    <div className="table">
       <h2> Past Check-in Records</h2>
       <table>
         <thead>
@@ -374,7 +379,7 @@ export function CheckInTable({ tableListData }: any) {
           </tr>
         </thead>
         <tbody>
-          {tableListData.length > 0 ? tableListData : (
+          {jsxTableListData && jsxTableListData.length > 0 ? jsxTableListData : (
             <tr>
               <td>Null</td>
               <td>Null</td>
@@ -383,14 +388,13 @@ export function CheckInTable({ tableListData }: any) {
           )}
         </tbody>
       </table>
-    </>
+    </div>
   );
 }
 
 export function MyCheckinPage(): ReactNode | Promise<ReactNode> {
   const useUser = useCurrentUser();
   const [checkInData, setCheckInData] = useState([]);
-  let logout = useLogout();
 
   useEffect(() => {
     if (useUser.user === null || useUser.user === undefined) {
@@ -402,7 +406,7 @@ export function MyCheckinPage(): ReactNode | Promise<ReactNode> {
 
     const fetchGuestData = async () => {
       const guestId = useUser.user;
-      const url = `/api/guest/${guestId}`;
+      const url = `guest/${guestId}`;
       // const testUrl = `http://localhost:4000/guest/${guestId}`
       try {
         const response = await fetch(url, {signal: signal});
@@ -425,19 +429,20 @@ export function MyCheckinPage(): ReactNode | Promise<ReactNode> {
   }, [useUser.user])
 
   async function handleDeleteCheckin(key: string) {
-    const url = `/api/guest/new-check-in`;
+    const url = `/guest/new-check-in`;
     try {
       const response = await fetch(url, {
         method: 'DELETE',
         body: JSON.stringify({
           checkInId: key, 
+          guestId: useUser.user,
         }),
-        credentials: 'include'
+        credentials: 'include',
+        headers: {
+          "Content-Type": "application/json",
+        }
       });
       if (!response.ok) {
-        if (response.status === 401) {
-          logout();
-        }
         throw new Error(JSON.stringify(response.body));
       }
       
@@ -454,16 +459,16 @@ export function MyCheckinPage(): ReactNode | Promise<ReactNode> {
   }
 
   return (
-    <>
+    <div className={checkInData.length > 0 ? "checkin_content" : "checkin_empty"}>
       <h3> My Checkins </h3>
       <ul>
         {
           checkInData.length > 0 ? 
-          checkInData.map((item: checkInDataFormat) => (<li key={item.id}> {`Check-in Id: ${item.id}; Name: ${item.firstName} ${item.lastName};  Message: ${item.message}`} <span className="hover-link" key={item.id} onClick={() => handleDeleteCheckin(item.id)}> X </span> </li>)) :
+          checkInData.map((item: checkInDataFormat) => (<li key={item.id}> {`Check-in Id: ${item.id}; Name: ${item.firstName} ${item.lastName};  Message: ${item.message}`} <span className="hover-link" key={item.id} onClick={() => handleDeleteCheckin(item.id)}> &#10006; </span> </li>)) :
           (<> <h2> No checkins available yet </h2> </>)
         }
       </ul>
-    </>
+    </div>
   );
 }
 
@@ -474,15 +479,22 @@ interface checkInDataFormat {
   message: string,
 }
 
+type checkinDataObject = {
+  id?: string
+  firstName: string,
+  lastName: string,
+  message: string,
+}
+
 export function LandingPage(): ReactNode | Promise<ReactNode> {
-  const [tableListData, setTableListData] = useState([]);
+  const [tableListData, setTableListData] = useState<checkInDataFormat[]>([]);
   const [tableCellId, setTableCellId] = useState(0);
 
   useEffect(() => {
     const controller = new AbortController();
     const signal = controller.signal;
     async function fetchTableData() {
-      const url = "/api/guest/all";
+      const url = "/guest/all";
       try {
         const response = await fetch(url, {signal: signal});
         if (!response.ok) {
@@ -490,7 +502,7 @@ export function LandingPage(): ReactNode | Promise<ReactNode> {
         }
   
         const json = await response.json();
-        convertListOfObjectsToJSX(json);
+        setTableListData(json);
       } catch (error: any) {
         if (error.name !== 'AbortError')
           console.error(error);
@@ -502,12 +514,29 @@ export function LandingPage(): ReactNode | Promise<ReactNode> {
     }
   }, []);
 
-  function convertListOfObjectsToJSX(listOfObjects: any) {
-    return listOfObjects.map((item: checkInDataFormat) => {
-      const itemIdToDisplay = item.id ? item.id : tableCellId;
-      if (!item.id) {
-        setTableCellId(n => n + 1);
+  function convertListOfObjectsOrObjectToJSX(listOfObjects: (checkinDataObject[] | checkinDataObject)) {
+    if (!Array.isArray(listOfObjects)) {
+      const object: checkinDataObject = listOfObjects;
+      let totalElements = (object.id === undefined || object.id === null) ? 1 : 0;
+      const itemIdToDisplay = object.id !== undefined ? object.id : totalElements + tableCellId;
+      
+      const udpatedObject = (
+        <tr key={itemIdToDisplay}>
+          <td>{object.firstName}</td>
+          <td>{object.lastName}</td>
+          <td>{object.message}</td>
+        </tr>
+      );
+      setTableCellId((prev) => prev + totalElements);
+      return udpatedObject;
+    }
+
+    let totalElements = 0;
+    const updatedList = listOfObjects.slice(0,50).map((item: checkinDataObject, index: number) => {
+      if (item.id === undefined || item.id === null) {
+        totalElements += 1
       }
+      const itemIdToDisplay = item.id !== undefined ? item.id : index + tableCellId;
       return (
         <tr key={itemIdToDisplay}>
           <td>{item.firstName}</td>
@@ -516,15 +545,17 @@ export function LandingPage(): ReactNode | Promise<ReactNode> {
         </tr>
       );
     });
+    setTableCellId((prev) => prev + totalElements);
+    return updatedList;
   }
 
   return (
-    <>
+    <div className="landingPage">
       <Header />
-      <CheckInForm setTableListData={setTableListData} tableCellId={tableCellId} setTableCellId={setTableCellId} convertListOfObjectsToJSX={convertListOfObjectsToJSX}/>
-      <CheckInTable tableListData={tableListData} />
+      <CheckInForm setTableListData={setTableListData} tableCellId={tableCellId} setTableCellId={setTableCellId}/>
+      <CheckInTable tableListData={tableListData} convertListOfObjectsOrObjectToJSX={convertListOfObjectsOrObjectToJSX}/>
       <Footer />
-    </>
+    </div>
   )
 }
 
@@ -551,4 +582,3 @@ export default function App() {
     </React.StrictMode>
   );
 }
-
