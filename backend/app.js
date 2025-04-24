@@ -30,12 +30,14 @@ app.use(session({
         maxAge: 1000 * 60 * 60
     }
 }));
-app.use(cors({
-    origin: ["http://localhost:80", "http://localhost:3000", "http://localhost:5173"],
-    methods: ['GET', 'POST', 'DELETE'],
-    credentials: true,
-    allowedHeaders: ['Content-Type']
-}));
+// app.use(cors({
+//     origin: ["http://localhost:80", "http://localhost:3000", "http://localhost:5173"],
+//     methods: ['GET', 'POST', 'DELETE'],
+//     credentials: true,
+//     allowedHeaders: ['Content-Type']
+// }));
+
+app.use(cors("*"))
 
 app.use("/user", userRouter);
 app.use("/guest", guestRouter);
@@ -70,4 +72,4 @@ app.get("/", async(req, res) => {
             error: "Server error in landing page"
         })        
     }
-})
+}).post("/", async(req, res) => { return res.status(400); });

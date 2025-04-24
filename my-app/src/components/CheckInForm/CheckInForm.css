@@ -1,0 +1,72 @@
+.checkin-form {
+    display: flex;
+    flex-direction: column;
+    flex-wrap: nowrap;
+    overflow-x: hidden;
+    flex-grow: 5;
+    min-width: 324px;
+    min-height: 376px;
+    position: relative;
+    height: 40%;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+  }
+
+.checkin-form > * {
+    width: 70%;
+    margin: 5px;
+}
+
+.checkin-form-wrapper > * {
+    flex-grow: 1;
+    flex-wrap: wrap;
+    flex-direction: column;
+    position: relative;
+    flex-shrink: 0;
+  }
+
+.checkin-form-wrapper {
+    display: flex;
+    flex-direction: column;
+    width: 40%;
+    margin: auto;
+    background-color: var(--main-color);
+    padding: 1rem;
+    border-radius: 10px;
+    box-shadow: 0px 2px 3px rgba(0, 0, 0, 0.2);
+    box-sizing: border-box;
+    min-width: 324px;
+    min-height: 324px;
+    flex-grow: 1;
+}
+
+#checkinForm {
+    display: flex;
+    flex-grow: 1;
+    background-color: inherit;
+    box-shadow: none;
+    color: #FFF;
+    min-height: 420px;
+    position: relative;
+}
+
+#checkinFormImg {
+    position: absolute;
+    z-index: -1;
+    height: 100%;
+    width: 100%;
+    box-sizing: border-box;
+    border-radius: 10%;
+    object-fit: cover;
+    justify-self: center;
+    align-items: center;
+    transform: translateX(-1rem);
+}
+
+@media (max-width: 428px) {
+    #checkinFormImg {
+      width: 90%;
+      transform: translateX(0);
+    }
+  }

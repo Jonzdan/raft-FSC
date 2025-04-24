@@ -1,0 +1,22 @@
+.table {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+}
+
+table {
+    outline: auto 1px black;
+    width: 50%;
+    margin: auto;
+    margin-top: 1rem;
+    margin-bottom: 1rem;
+    overflow: scroll;
+  }
+  
+table * {
+    outline: auto 1px black;
+    text-align: center;
+    padding: 2px;
+    box-sizing: border-box;
+}
+  
