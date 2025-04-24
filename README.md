@@ -49,7 +49,7 @@ To run dev environment:
 
 * In two separate terminals, each in my-app (frontend) and backend folders, run the following commands:
     1) Frontend: npm run dev
-    2) Backend: npm run start
+    2) Backend: npm run start-backend
 
 * Frontend served at localhost:5173; Backend served at localhost:4000.
     Note: Docker route config prefixes frontend requests with /api/.
