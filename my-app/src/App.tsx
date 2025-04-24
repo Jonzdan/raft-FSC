@@ -263,7 +263,7 @@ export function SignUpPage() {
 }
 
 // Has an image behind it
-export function CheckInForm({ setTableListData, tableCellId, setTableCellId, convertListOfObjectsToJSX }: any) {
+export function CheckInForm({ setTableListData, tableCellId, setTableCellId }: any) {
   const { formData, error, setCustomErrorTimeout, handleFormDataChange  } = useForm({
     firstName: '',
     lastName: '',
@@ -318,12 +318,12 @@ export function CheckInForm({ setTableListData, tableCellId, setTableCellId, con
 
       setTableListData((prev: checkInDataFormat[]) => [
         ...prev,
-        convertListOfObjectsToJSX({ 
+        { 
           id: newTableCellId,
           firstName: formData.firstName,
           lastName: formData.lastName,
           message: formData.message,
-        })
+        }
       ]);
 
 
@@ -360,7 +360,13 @@ export function CheckInForm({ setTableListData, tableCellId, setTableCellId, con
   )
 }
 
-export function CheckInTable({ tableListData }: any) {
+export function CheckInTable({ tableListData , convertListOfObjectsOrObjectToJSX }: any) {
+  const [jsxTableListData, setJsxTableListData] = useState([]);
+  useEffect(() => {
+    setJsxTableListData(convertListOfObjectsOrObjectToJSX(tableListData))
+  }, [tableListData])
+
+
   return (
     <div className="table">
       <h2> Past Check-in Records</h2>
@@ -373,7 +379,7 @@ export function CheckInTable({ tableListData }: any) {
           </tr>
         </thead>
         <tbody>
-          {tableListData.length > 0 ? tableListData : (
+          {jsxTableListData && jsxTableListData.length > 0 ? jsxTableListData : (
             <tr>
               <td>Null</td>
               <td>Null</td>
@@ -473,8 +479,15 @@ interface checkInDataFormat {
   message: string,
 }
 
+type checkinDataObject = {
+  id?: string
+  firstName: string,
+  lastName: string,
+  message: string,
+}
+
 export function LandingPage(): ReactNode | Promise<ReactNode> {
-  const [tableListData, setTableListData] = useState([]);
+  const [tableListData, setTableListData] = useState<checkInDataFormat[]>([]);
   const [tableCellId, setTableCellId] = useState(0);
 
   useEffect(() => {
@@ -489,8 +502,7 @@ export function LandingPage(): ReactNode | Promise<ReactNode> {
         }
   
         const json = await response.json();
-        const jsxJson = convertListOfObjectsToJSX(json);
-        setTableListData(jsxJson);
+        setTableListData(json);
       } catch (error: any) {
         if (error.name !== 'AbortError')
           console.error(error);
@@ -502,12 +514,29 @@ export function LandingPage(): ReactNode | Promise<ReactNode> {
     }
   }, []);
 
-  function convertListOfObjectsToJSX(listOfObjects: any) {
-    return listOfObjects.map((item: checkInDataFormat) => {
-      const itemIdToDisplay = item.id ? item.id : tableCellId;
-      if (!item.id) {
-        setTableCellId(n => n + 1);
+  function convertListOfObjectsOrObjectToJSX(listOfObjects: (checkinDataObject[] | checkinDataObject)) {
+    if (!Array.isArray(listOfObjects)) {
+      const object: checkinDataObject = listOfObjects;
+      let totalElements = (object.id === undefined || object.id === null) ? 1 : 0;
+      const itemIdToDisplay = object.id !== undefined ? object.id : totalElements + tableCellId;
+      
+      const udpatedObject = (
+        <tr key={itemIdToDisplay}>
+          <td>{object.firstName}</td>
+          <td>{object.lastName}</td>
+          <td>{object.message}</td>
+        </tr>
+      );
+      setTableCellId((prev) => prev + totalElements);
+      return udpatedObject;
+    }
+
+    let totalElements = 0;
+    const updatedList = listOfObjects.slice(0,50).map((item: checkinDataObject, index: number) => {
+      if (item.id === undefined || item.id === null) {
+        totalElements += 1
       }
+      const itemIdToDisplay = item.id !== undefined ? item.id : index + tableCellId;
       return (
         <tr key={itemIdToDisplay}>
           <td>{item.firstName}</td>
@@ -516,13 +545,15 @@ export function LandingPage(): ReactNode | Promise<ReactNode> {
         </tr>
       );
     });
+    setTableCellId((prev) => prev + totalElements);
+    return updatedList;
   }
 
   return (
     <div className="landingPage">
       <Header />
-      <CheckInForm setTableListData={setTableListData} tableCellId={tableCellId} setTableCellId={setTableCellId} convertListOfObjectsToJSX={convertListOfObjectsToJSX}/>
-      <CheckInTable tableListData={tableListData} />
+      <CheckInForm setTableListData={setTableListData} tableCellId={tableCellId} setTableCellId={setTableCellId}/>
+      <CheckInTable tableListData={tableListData} convertListOfObjectsOrObjectToJSX={convertListOfObjectsOrObjectToJSX}/>
       <Footer />
     </div>
   )
