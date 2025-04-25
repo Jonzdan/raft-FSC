@@ -1,7 +1,7 @@
 import { useForm } from "../../hooks/useForm";
 import { checkInDataFormat } from "../../types/checkInDataTypes";
 import { useCurrentUser, useLogout } from "../../userContext";
-import "./CheckInForm.css";
+import styles from "./CheckInForm.module.css";
 
 // Has an image behind it
 export function CheckInForm({ setTableListData, tableCellId, setTableCellId }: any) {
@@ -80,9 +80,9 @@ export function CheckInForm({ setTableListData, tableCellId, setTableCellId }: a
 
 
   return (
-    <div id="checkinForm" className="checkin-form-wrapper">
-      <img id="checkinFormImg" src="https://fiverr-res.cloudinary.com/images/q_auto,f_auto/gigs/124714084/original/762ca0507089ff647bf1c46d1c123e6603af95dc/send-20-high-quality-4k-random-wallpapers.jpg" alt=""/>
-      <form onSubmit={handleSubmit} onChange={handleFormOnChange} className="checkin-form">
+    <div className={styles.checkin_form_wrapper}>
+      <img className={styles.checkinFormImg} src="https://fiverr-res.cloudinary.com/images/q_auto,f_auto/gigs/124714084/original/762ca0507089ff647bf1c46d1c123e6603af95dc/send-20-high-quality-4k-random-wallpapers.jpg" alt=""/>
+      <form onSubmit={handleSubmit} onChange={handleFormOnChange} className={styles.checkin_form}>
         <h2> Submit a check-in </h2>
         <label htmlFor="firstName">First Name </label>
         <input type="text" name="firstName" id="" />

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import "./CheckInTable.css";
+import style from "./CheckInTable.module.css";
 
 export function CheckInTable({ tableListData , convertListOfObjectsOrObjectToJSX }: any) {
   const [jsxTableListData, setJsxTableListData] = useState([]);
@@ -9,7 +9,7 @@ export function CheckInTable({ tableListData , convertListOfObjectsOrObjectToJSX
 
 
   return (
-    <div className="table">
+    <div className={style.table}>
       <h2> Past Check-in Records</h2>
       <table>
         <thead>

@@ -1,7 +1,7 @@
 import { useCurrentUser } from "../../userContext";
 import { useEffect, useState, ReactNode } from "react";
 import { checkInDataFormat } from "../../types/checkInDataTypes";
-import "./MyCheckInPage.css";
+import "./MyCheckInPage.module.css";
 
 export function MyCheckInPage(): ReactNode | Promise<ReactNode> {
     const useUser = useCurrentUser();

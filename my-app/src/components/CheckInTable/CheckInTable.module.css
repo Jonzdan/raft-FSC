@@ -2,13 +2,13 @@
     display: flex;
     flex-direction: column;
     width: 100%;
+    margin-top: 1rem;
 }
 
 table {
     outline: auto 1px black;
     width: 50%;
     margin: auto;
-    margin-top: 1rem;
     margin-bottom: 1rem;
     overflow: scroll;
   }
@@ -19,4 +19,5 @@ table * {
     padding: 2px;
     box-sizing: border-box;
 }
+
   

@@ -1,5 +1,5 @@
 import { useEffect, useState, ReactNode, } from "react";
-import "./LandingPage.css";
+import style from "./LandingPage.module.css";
 import { checkInDataFormat, checkinDataObject } from "../../types/checkInDataTypes";
 import { Header } from "../Header/Header";
 import { Footer } from "../Footer/Footer";
@@ -70,7 +70,7 @@ export function LandingPage(): ReactNode | Promise<ReactNode> {
     }
   
     return (
-      <div className="landingPage">
+      <div className={style.landingPage}>
         <Header />
         <CheckInForm setTableListData={setTableListData} tableCellId={tableCellId} setTableCellId={setTableCellId}/>
         <CheckInTable tableListData={tableListData} convertListOfObjectsOrObjectToJSX={convertListOfObjectsOrObjectToJSX}/>

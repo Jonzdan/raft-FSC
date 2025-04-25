@@ -1,24 +1,23 @@
-.checkin-form {
+.checkin_form {
     display: flex;
     flex-direction: column;
     flex-wrap: nowrap;
     overflow-x: hidden;
-    flex-grow: 5;
+    flex-grow: 1;
     min-width: 324px;
-    min-height: 376px;
-    position: relative;
-    height: 40%;
     justify-content: center;
     align-items: center;
-    width: 100%;
+    box-shadow: none;
+    color: #FFF;
+    min-height: 420px;
   }
 
-.checkin-form > * {
+.checkin_form > * {
     width: 70%;
     margin: 5px;
 }
 
-.checkin-form-wrapper > * {
+.checkin_form_wrapper > * {
     flex-grow: 1;
     flex-wrap: wrap;
     flex-direction: column;
@@ -26,33 +25,24 @@
     flex-shrink: 0;
   }
 
-.checkin-form-wrapper {
+.checkin_form_wrapper {
     display: flex;
     flex-direction: column;
     width: 40%;
     margin: auto;
-    background-color: var(--main-color);
     padding: 1rem;
     border-radius: 10px;
-    box-shadow: 0px 2px 3px rgba(0, 0, 0, 0.2);
     box-sizing: border-box;
     min-width: 324px;
-    min-height: 324px;
+    min-height: 475px;
     flex-grow: 1;
-}
-
-#checkinForm {
-    display: flex;
-    flex-grow: 1;
-    background-color: inherit;
-    box-shadow: none;
-    color: #FFF;
-    min-height: 420px;
+    height: 100%;
     position: relative;
 }
 
-#checkinFormImg {
+.checkinFormImg {
     position: absolute;
+    inset: 0;
     z-index: -1;
     height: 100%;
     width: 100%;
@@ -61,12 +51,14 @@
     object-fit: cover;
     justify-self: center;
     align-items: center;
-    transform: translateX(-1rem);
+    margin: auto;
+    min-width: 324px;
+    min-height: 500px;
+    transform: translateY(1rem);
 }
 
 @media (max-width: 428px) {
-    #checkinFormImg {
+    .checkinFormImg {
       width: 90%;
-      transform: translateX(0);
     }
   }

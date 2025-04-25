@@ -21,22 +21,27 @@ header {
     overflow: hidden;
   }
   
-  div.header-links:first-child {
+  div.header_links:first-child {
     margin-right: 5px;
     margin-left: auto;
     width: fit-content;
   }
   
   
-  div.header-links:last-child {
+  div.header_links:last-child {
     margin-left: 1rem;
     width: fit-content;
   }
   
-  .header-links * {
+  .header_links * {
     padding: 0 1rem;
     box-sizing: border-box;
     margin: auto;
+  }
+
+  .header_links {
+    display: flex;
+    flex-direction: row;
   }
 
   header {

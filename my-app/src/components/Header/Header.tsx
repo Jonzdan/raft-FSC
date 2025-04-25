@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
-import { useCurrentUser, useLogout } from "../userContext";
-import "./Header.css";
+import { useCurrentUser, useLogout } from "../../userContext";
+import style from "./Header.module.css";
 
 export function Header() {
     const useUser = useCurrentUser();
@@ -17,7 +17,7 @@ export function Header() {
     return (
       <header>
         <h5> Lorem, ipsum dolor sit amet consectetur adipisicing elit. Illum amet dolor quo perferendis quod, non ea recusandae, suscipit inventore asperiores a iste ducimus velit praesentium, quae ullam iusto sint quidem?</h5>
-        <div className="header-links">
+        <div className={style.header_links}>
           {
             isLoggedIn ? (
               <>
