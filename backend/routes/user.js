@@ -3,7 +3,8 @@ import bcrypt from 'bcrypt';
 import { db } from '../database.js';
 export const userRouter = express.Router();
 
-userRouter.post("/signup", async(req, res) => {
+userRouter.post("/signup/", async(req, res) => {
+    console.log("here");
     const body = req.body;
     try {
         const {username: guestname, password, passwordConfirm} = body;

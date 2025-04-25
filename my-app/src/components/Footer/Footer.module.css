@@ -1,0 +1,12 @@
+footer {
+    bottom: 0;
+    background-color: var(--main-color);
+    width: 100%;
+  }
+
+  footer > h5 {
+    text-wrap: nowrap;
+    text-overflow: ellipsis;
+    overflow: hidden
+    ;
+  }

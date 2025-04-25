@@ -1,0 +1,13 @@
+.checkin_empty {
+    width: 50%;
+    margin: auto;
+    text-align: center;
+  }
+  
+  .checkin_content {
+    width: 50%;
+    margin: auto;
+    margin-top: 0;
+    padding: 1rem;
+    box-sizing: border-box;
+  }

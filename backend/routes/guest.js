@@ -147,7 +147,7 @@ guestRouter.delete("/new-check-in", async(req, res) => {
             message: "Success"
         });
     } catch (error) {
-        console.log(error);
+        console.error(error);
         res.status(500).json({
             error: "Unexpected Server Error"
         });
