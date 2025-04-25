@@ -16,9 +16,9 @@ To run locally with docker compose:
     4) Enter the following relevant .env variables and set a value:
         - PGUSER=[any]
         - PGPASSWORD_LOCAL=[any]
-        - PGHOST=[any]
+        - PGHOST=postgres
         - PGPORT=5432  (Default postrgres port)
-        - PGDATABASE=postgres
+        - PGDATABASE=[any]
         - MODE=dev
 
 * Ensure Docker Compose is installed with its engine. To spin the instance, run the following commands:
@@ -40,9 +40,9 @@ To run dev environment:
     2) Enter the following relevant .env variables and set a value:
         - PGUSER=[any]
         - PGPASSWORD_LOCAL=[any]
-        - PGHOST=[any]
+        - PGHOST=postgres
         - PGPORT=5432  (Default postrgres port)
-        - PGDATABASE=postgres
+        - PGDATABASE=[any]
         - MODE=[any] != dev
         - SESSION_SECRET_KEY=[any];
         - COOKIE_PARSER_SECRET=[any];
